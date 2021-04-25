@@ -74,8 +74,17 @@ void createProcess(int text_size, int data_size, Mmu *mmu, PageTable *page_table
 {
     // TODO: implement this!
     //   - create new process in the MMU
+    uint32_t newProcess = Mmu::createProcess();
+
     //   - allocate new variables for the <TEXT>, <GLOBALS>, and <STACK>
+    // How do we handle type and address? Is the name section correct?
+    // Currently setting Type and Address as placeholders
+    Mmu::addVariableToProcess(newProcess, "<TEXT>", DataType::Char, text_size, 0);
+    Mmu::addVariableToProcess(newProcess, "<GLOBALS>", DataType::Char, data_size, 0);
+    Mmu::addVariableToProcess(newProcess, "<STACK>", DataType::Char, 65536, 0);
+
     //   - print pid
+     std::cout << newProcess << std::end;
 }
 
 void allocateVariable(uint32_t pid, std::string var_name, DataType type, uint32_t num_elements, Mmu *mmu, PageTable *page_table)
