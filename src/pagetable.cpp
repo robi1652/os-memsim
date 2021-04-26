@@ -29,9 +29,17 @@ void PageTable::addEntry(uint32_t pid, int page_number)
     // Combination of pid and page number act as the key to look up frame number
     std::string entry = std::to_string(pid) + "|" + std::to_string(page_number);
 
-    int frame = 0; 
+    // Changed to -1 for the loop, frame0 can be a thing
+    int frame = -1; 
     // Find free frame
     // TODO: implement this!
+    // done
+    int mapIter = 0;
+    while (frame == -1) {
+        if (_table.find(mapIter) == _table.end()) {
+            frame = i;
+        }
+    }
     _table[entry] = frame;
 }
 
@@ -39,8 +47,10 @@ int PageTable::getPhysicalAddress(uint32_t pid, uint32_t virtual_address)
 {
     // Convert virtual address to page_number and page_offset
     // TODO: implement this!
-    int page_number = 0;
-    int page_offset = 0;
+    // done
+    int page_number = _page_size / virtual_address;
+
+    int page_offset = _page_size % virtual_address;
 
     // Combination of pid and page number act as the key to look up frame number
     std::string entry = std::to_string(pid) + "|" + std::to_string(page_number);
@@ -50,6 +60,8 @@ int PageTable::getPhysicalAddress(uint32_t pid, uint32_t virtual_address)
     if (_table.count(entry) > 0)
     {
         // TODO: implement this!
+        // Done, should I use find or at? or does it not matter
+        address = _table.at(entry) * page_size + page_offset;
     }
 
     return address;
