@@ -63,3 +63,37 @@ void Mmu::print()
         }
     }
 }
+
+//Process Mmu::getProcessAtIndex(int index) {
+//    return _processes[index];
+//}
+
+int Mmu::getVarVectorLength(int pid) {
+    Process *proc = NULL;
+    for (int i = 0; i < _processes.size(); i++) {
+        if (_processes[i]->pid == pid) {
+            proc = _processes[i];
+            break;
+        }
+    }
+    return proc->variables.size();
+}
+
+Variable Mmu::getVarAtIndex(int index) {
+    Process *proc;
+    for (int i = 0; i < _processes.size(); i++) {
+        if (_processes[i]->pid == pid) {
+            proc = _processes[i];
+            break;
+        }
+    }
+    return proc->variables[index];
+}
+
+//void Mmu::deleteVar() {
+
+//}
+
+uint32_t Mmu::getVarAddress(Variable* var) {
+    return var->virtual_address;
+}
