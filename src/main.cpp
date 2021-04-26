@@ -77,11 +77,9 @@ void createProcess(int text_size, int data_size, Mmu *mmu, PageTable *page_table
     uint32_t newProcess = Mmu::createProcess();
 
     //   - allocate new variables for the <TEXT>, <GLOBALS>, and <STACK>
-    // How do we handle type and address? Is the name section correct?
-    // Currently setting Type and Address as placeholders
-    Mmu::addVariableToProcess(newProcess, "<TEXT>", DataType::Char, text_size, 0);
-    Mmu::addVariableToProcess(newProcess, "<GLOBALS>", DataType::Char, data_size, 0);
-    Mmu::addVariableToProcess(newProcess, "<STACK>", DataType::Char, 65536, 0);
+    allocateVariable(newProcess, "<TEXT>", DataType::Char, text_size,*mmu, *page_table);
+    allocateVariable(newProcess, "<GLOBALS>", DataType::Char, data_size,*mmu, *page_table);
+    allocateVariable(newProcess, "<STACK>", DataType::Char, 65536,*mmu, *page_table);
 
     //   - print pid
      std::cout << newProcess << std::end;
@@ -91,16 +89,51 @@ void allocateVariable(uint32_t pid, std::string var_name, DataType type, uint32_
 {
     // TODO: implement this!
     //   - find first free space within a page already allocated to this process that is large enough to fit the new variable
+    // No idea how to look through the table for a page already allocated to the process
     //   - if no hole is large enough, allocate new page(s)
+
+    bool foundFreeSpace = false;
+    int mapIter = 0;
+    for (int i = 0; i < mmu.getVariableVectorLength(); i++) {
+        // Can this be a pointer or should I push it back onto Variables
+        Variable* var = mmu.getVariableAtIndex(i);
+        if (var->name == "<FREE_SPACE>" && var->size <= num_elements) {
+            foundFreeSpace = true;
+            if (var->size == num_elements) {
+                uint32_t varAddr = getVarAddress(var);
+                //deleteVar();
+                mmu.addVariableToProcess(pid, var_name, type, num_elements, varAddr);
+            } else if  (var->size > num_elements) {
+                // Update free space address to be N bytes bigger
+                // Update free space size to be N bytes smaller
+                // N = num_elements
+            }
+        }
+    }
+
+    if (foundFreeSpace == false) {
+        // addEntry to create new page
+        // get address 
+    }
+    
+
     //   - insert variable into MMU
+    mmu.addVariableToProcess(pid, var_name, type, num_elements, address);
+
     //   - print virtual memory address 
+    std::cout << address << std::endl;
 }
 
 void setVariable(uint32_t pid, std::string var_name, uint32_t offset, void *value, Mmu *mmu, PageTable *page_table, void *memory)
 {
     // TODO: implement this!
     //   - look up physical address for variable based on its virtual address / offset
+    // Need to know up in alloVar too, how do we get virtual address in main.cpp?
+
+    int physicalAddress;
+    physicalAddress = PageTable::getPhysicalAddress(pid, virtual_address);
     //   - insert `value` into `memory` at physical address
+
     //   * note: this function only handles a single element (i.e. you'll need to call this within a loop when setting
     //           multiple elements of an array) 
 }
