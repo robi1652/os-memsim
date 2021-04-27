@@ -102,3 +102,23 @@ uint32_t Mmu::getLastVarSize(int pid) {
     Process *proc = _processes[getIndexOfProc(pid)];
     return proc->variables[variables.size() - 1]->size;
 }
+
+Variable* Mmu::getVariable(uint32_t pid, std::string v_name) {
+    Process *p = NULL;
+
+    //for process in list of processes, find matching process id
+    for (int i = 0; i < _processes.size(); i++) 
+    {
+        if (_processes[i]->pid == pid) p = _processes[i];
+    }
+
+    //given the process, serach it's variable for the match of the variable you sent in. return the match's types
+    for (int i = 0; i < p->variables.size(); i++) 
+    {
+        if (p->variables[i]->name == v_name) return p->variables[i];
+    }
+
+    //should never reach here
+    std::cout << "ERROR: logic in Mmu::getDataType did not work as expected. /mmu.cpp line 89" << std::endl;
+    return NULL;
+}
