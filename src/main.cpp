@@ -3,9 +3,6 @@
 #include <cstring>
 #include "mmu.h"
 #include "pagetable.h"
-/*
-comment
-*/
 
 void printStartMessage(int page_size);
 void createProcess(int text_size, int data_size, Mmu *mmu, PageTable *page_table);
@@ -77,15 +74,16 @@ void createProcess(int text_size, int data_size, Mmu *mmu, PageTable *page_table
 {
     // TODO: implement this!
     //   - create new process in the MMU
-    uint32_t newProcess = Mmu::createProcess();
+    uint32_t newProcess = mmu->createProcess(); //::createProcess();
+    
 
     //   - allocate new variables for the <TEXT>, <GLOBALS>, and <STACK>
-    allocateVariable(newProcess, "<TEXT>", DataType::Char, text_size,*mmu, *page_table);
-    allocateVariable(newProcess, "<GLOBALS>", DataType::Char, data_size,*mmu, *page_table);
-    allocateVariable(newProcess, "<STACK>", DataType::Char, 65536,*mmu, *page_table);
+    allocateVariable(newProcess, "<TEXT>", DataType::Char, text_size, mmu, page_table);
+    allocateVariable(newProcess, "<GLOBALS>", DataType::Char, data_size,mmu, page_table);
+    allocateVariable(newProcess, "<STACK>", DataType::Char, 65536,mmu, page_table);
 
     //   - print pid
-     std::cout << newProcess << std::end;
+     std::cout << newProcess << std::endl;
 }
 
 void allocateVariable(uint32_t pid, std::string var_name, DataType type, uint32_t num_elements, Mmu *mmu, PageTable *page_table)
@@ -116,9 +114,9 @@ void allocateVariable(uint32_t pid, std::string var_name, DataType type, uint32_
 
     bool checkIfAddEntry = false;
 
-    for (int i = 0; i < mmu.getVariableVectorLength(); i++) {
+    for (int i = 0; i < mmu->getVarVectorLength(pid); i++) {
         // Can this be a pointer or should I push it back onto Variables
-        Variable* var = mmu.getVariableAtIndex(i);
+        Variable* var = mmu->getVariableAtIndex(i, pid);
         if (var->name == "<FREE_SPACE>" && var->size <= trueSize) {
             foundFreeSpace = true;
             if (var->size == trueSize) {
@@ -139,6 +137,7 @@ void allocateVariable(uint32_t pid, std::string var_name, DataType type, uint32_
                 // How do I do that?
                 // Current plan: 
                 // 1. Figure out how much space is left on this current page
+                uint32_t page_size = page_table->getPageSize();
                 int currentPage = var->virtual_address / page_size;
                 int spaceLeft = var->virtual_address - (page_size * currentPage);
                 // 2. If space left < space needed, then a new page is needed. 
@@ -149,7 +148,7 @@ void allocateVariable(uint32_t pid, std::string var_name, DataType type, uint32_
 
                 //   - insert variable into MMU
                 // Create the new variable              
-                Mmu::addVariableToProcess(pid, var_name, type, trueSize, newVirtAdd);
+                mmu->addVariableToProcess(pid, var_name, type, trueSize, newVirtAdd);
             }
         }
     }
@@ -158,7 +157,8 @@ void allocateVariable(uint32_t pid, std::string var_name, DataType type, uint32_
     // 1. Check to see if it fits on the current page, and if it does, then do nothing.
     //   -- If it doesn't then we need to addEntry
 
-    int currentPage = page_table.pageCount(pid);
+    int currentPage = page_table->pageCount(pid);
+    uint32_t page_size = page_table->getPageSize();
 
     if (checkIfAddEntry == true) {
         int currentSize = mmu->currentSize(pid);
@@ -166,15 +166,15 @@ void allocateVariable(uint32_t pid, std::string var_name, DataType type, uint32_
             // Need to addEntry
             // Does this setup work? Or does it conflict with that second example?
             for (int i = page_size * currentPage; i < currentSize; i += page_size) {
-                page_table.addEntry(pid, currentPage + 1);
+                page_table->addEntry(pid, currentPage + 1);
             }
         }
     }
      
     // get address 
     //   - print virtual memory address 
-    uint32_t oldFinal = page_table.getPhysicalAddress(pid, getLastVarAddress(pid));
-    address =  oldFinal + getLastVarSize(int pid);
+    uint32_t oldFinal = page_table->getPhysicalAddress(pid, mmu->getLastVarAddress(pid));
+    address =  oldFinal + mmu->getLastVarSize(pid);
     std::cout << address << std::endl;
 }
 
@@ -182,7 +182,12 @@ void setVariable(uint32_t pid, std::string var_name, uint32_t offset, void *valu
 {
     // TODO: implement this!
     //   - look up physical address for variable based on its virtual address / offset
+    // Need to know up in alloVar too, how do we get virtual address in main.cpp?
+
+    //int physicalAddress;
+    //physicalAddress = PageTable::getPhysicalAddress(pid, virtual_address);
     //   - insert `value` into `memory` at physical address
+
     //   * note: this function only handles a single element (i.e. you'll need to call this within a loop when setting
     //           multiple elements of an array)
     Variable *v = mmu->getVariable(pid, var_name);
@@ -216,11 +221,43 @@ void setVariable(uint32_t pid, std::string var_name, uint32_t offset, void *valu
     }
 }
 
+/*
+From Lectrue:
+-Dynamic Storage Allocation
+    -Dynamically search memory for physical memory large enough for each request
+    -Merge Adgacent partitions when deallocating memory
+*/
 void freeVariable(uint32_t pid, std::string var_name, Mmu *mmu, PageTable *page_table)
 {
     // TODO: implement this!
     //   - remove entry from MMU
     //   - free page if this variable was the only one on a given page
+    
+
+    //get list of variables withing process
+    Process *pid_process = mmu->getProcess(pid);
+    std::vector<Variable*> v_list = pid_process->variables;
+    uint32_t index = -1;
+
+    for (int i = 0; i < v_list.size(); i++) 
+    {
+        if (v_list[i]->name == var_name) index = i;
+    }
+
+    //for debugging purposes
+    if (index == -1) 
+    {
+        std::cout << "ERROR: variable was never found. main.cpp / freeVaraible" << std::endl;
+        return;
+    }
+
+    std::vector<uint32_t> pages_to_delete = mmu->mergeAdjacentPartitions(pid, page_table->getPageSize());
+    for (int i = 0; i <pages_to_delete.size(); i++) 
+    {
+        //delete entry here
+    }
+
+
 }
 
 void terminateProcess(uint32_t pid, Mmu *mmu, PageTable *page_table)
@@ -229,3 +266,4 @@ void terminateProcess(uint32_t pid, Mmu *mmu, PageTable *page_table)
     //   - remove process from MMU
     //   - free all pages associated with given process
 }
+
