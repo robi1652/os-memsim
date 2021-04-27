@@ -95,17 +95,23 @@ void allocateVariable(uint32_t pid, std::string var_name, DataType type, uint32_
     bool foundFreeSpace = false;
     int mapIter = 0;
     uint32_t address;
-
+    int typeSize = 0;
     uint32_t trueSize;
     if (type == DataType::Char) {
         trueSize = num_elements;
+        typeSize = 1;
     } else if (type == DataType::Short) {
         trueSize = num_elements * 2;
+        typeSize = 2;
     } else if (type == DataType::Int || type == DataType::Float) {
         trueSize = num_elements * 4;
+        typeSize = 4;
     } else if (type == DataType::Long || type == DataType::Double) {
         trueSize = num_elements * 8;
+        typeSize = 8;
     }
+
+    bool checkIfAddEntry = false;
 
     for (int i = 0; i < mmu.getVariableVectorLength(); i++) {
         // Can this be a pointer or should I push it back onto Variables
@@ -117,33 +123,55 @@ void allocateVariable(uint32_t pid, std::string var_name, DataType type, uint32_
                 var->name = var_name;
                 var->type = type;
             } else if  (var->size > trueSize) {
-                // Update free space address to be N bytes bigger
+                checkIfAddEntry = true;
+
+                // Update free space address to be N bytes bigger            
+                uint32_t newVirtAdd = var->virtual_address;
                 var->virtual_address += trueSize;
                 // Update free space size to be N bytes smaller
                 var->size -= trueSize;
                 // N = num_elements
 
-                // Create the new variable
-                Mmu::addVariableToProcess(pid, var_name, type, trueSize, var->virtual_address + 1);
+                // Need to check to make sure an element doesn't get split on a page break HERE, right?
+                // How do I do that?
+                // Current plan: 
+                // 1. Figure out how much space is left on this current page
+                int currentPage = var->virtual_address / page_size;
+                int spaceLeft = var->virtual_address - (page_size * currentPage);
+                // 2. If space left < space needed, then a new page is needed. 
+                if (spaceLeft < trueSize) {
+                    newVirtAdd += (spaceLeft % typeSize);
+                }
+                //   --Mod space left by type size. If mod != 0, newVirtAdd += result of the mod? 
 
+                //   - insert variable into MMU
+                // Create the new variable              
+                Mmu::addVariableToProcess(pid, var_name, type, trueSize, newVirtAdd);
             }
         }
     }
 
-    if (foundFreeSpace == false) {
-        int currentPage = page_table.pageCount(pid);
-        uint32_t oldFinal = page_table.getPhysicalAddress(pid, getLastVarAddress(pid));
-        address =  oldFinal + getLastVarSize(int pid);
-        // addEntry to create new page
-        for (int i = currentPage + 1, i < (address + trueSize) / page_size; i++) {
-            page_table.addEntry(pid, i);
-        }
-        //   - insert variable into MMU
-        // get address 
-        mmu.addVariableToProcess(pid, var_name, type, num_elements, address);   
-    }
+    // Currently Confused: Don't know how adding pages/frames works. Here's my thought process
+    // 1. Check to see if it fits on the current page, and if it does, then do nothing.
+    //   -- If it doesn't then we need to addEntry
 
+    int currentPage = page_table.pageCount(pid);
+
+    if (checkIfAddEntry == true) {
+        int currentSize = mmu->currentSize(pid);
+        if (currentSize > (page_size * currentPage)) {
+            // Need to addEntry
+            // Does this setup work? Or does it conflict with that second example?
+            for (int i = page_size * currentPage; i < currentSize; i += page_size) {
+                page_table.addEntry(pid, currentPage + 1);
+            }
+        }
+    }
+     
+    // get address 
     //   - print virtual memory address 
+    uint32_t oldFinal = page_table.getPhysicalAddress(pid, getLastVarAddress(pid));
+    address =  oldFinal + getLastVarSize(int pid);
     std::cout << address << std::endl;
 }
 

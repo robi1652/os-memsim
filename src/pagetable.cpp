@@ -89,5 +89,6 @@ int PageTable::pageCount(int pid) {
         pageNum++;
         currEntry = std::to_string(pid) + "|" + std::to_string(pageNum);
     }
-    return pageNum - 1;
+    return pageNum;
 }
+

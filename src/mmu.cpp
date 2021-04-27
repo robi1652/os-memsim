@@ -103,6 +103,15 @@ uint32_t Mmu::getLastVarSize(int pid) {
     return proc->variables[variables.size() - 1]->size;
 }
 
+uint32_t Mmu::currentSize(int pid) {
+    int sum = 0;
+    Process *proc = _processes[getIndexOfProc(pid)];
+    for (int i = 0; i < proc->variables.size(); i++) {
+        sum += proc->variables[i]->size;
+    }
+    return sum;
+}
+
 Variable* Mmu::getVariable(uint32_t pid, std::string v_name) {
     Process *p = NULL;
 
