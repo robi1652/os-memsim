@@ -151,14 +151,38 @@ void setVariable(uint32_t pid, std::string var_name, uint32_t offset, void *valu
 {
     // TODO: implement this!
     //   - look up physical address for variable based on its virtual address / offset
-    // Need to know up in alloVar too, how do we get virtual address in main.cpp?
-
-    int physicalAddress;
-    physicalAddress = PageTable::getPhysicalAddress(pid, virtual_address);
     //   - insert `value` into `memory` at physical address
-
     //   * note: this function only handles a single element (i.e. you'll need to call this within a loop when setting
-    //           multiple elements of an array) 
+    //           multiple elements of an array)
+    Variable *v = mmu->getVariable(pid, var_name);
+    DataType data_type = v->type;
+    uint32_t physical_address;
+    uint32_t index;
+    
+    /*
+    Depending on datatype, we will need to adjust index and number of bytes. recall from class the indexing scheme we implemented
+    */
+    if (data_type == DataType::Char) 
+    {
+        index = v->virtual_address + offset;
+        physical_address = page_table->getPhysicalAddress(pid, index);
+        memcpy(memory + physical_address, value, 1);
+    }
+    else if (data_type == DataType::Short) 
+    {
+        index = v->virtual_address + offset * 2;
+        physical_address = page_table->getPhysicalAddress(pid, index);
+        memcpy(memory + physical_address, value, 2);
+    } else if (data_type == DataType::Float || data_type == DataType::Int) 
+    {
+        index = v->virtual_address + offset * 4;
+        physical_address = page_table->getPhysicalAddress(pid, index);
+        memcpy(memory + physical_address, value, 4);
+    } else if (data_type == DataType::Double || data_type == DataType::Long) {
+        index = v->virtual_address + offset * 8;
+        physical_address = page_table->getPhysicalAddress(pid, index);
+        memcpy(memory + physical_address, value, 8);
+    }
 }
 
 void freeVariable(uint32_t pid, std::string var_name, Mmu *mmu, PageTable *page_table)
