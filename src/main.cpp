@@ -94,31 +94,54 @@ void allocateVariable(uint32_t pid, std::string var_name, DataType type, uint32_
 
     bool foundFreeSpace = false;
     int mapIter = 0;
+    uint32_t address;
+
+    uint32_t trueSize;
+    if (type == DataType::Char) {
+        trueSize = num_elements;
+    } else if (type == DataType::Short) {
+        trueSize = num_elements * 2;
+    } else if (type == DataType::Int || type == DataType::Float) {
+        trueSize = num_elements * 4;
+    } else if (type == DataType::Long || type == DataType::Double) {
+        trueSize = num_elements * 8;
+    }
+
     for (int i = 0; i < mmu.getVariableVectorLength(); i++) {
         // Can this be a pointer or should I push it back onto Variables
         Variable* var = mmu.getVariableAtIndex(i);
-        if (var->name == "<FREE_SPACE>" && var->size <= num_elements) {
+        if (var->name == "<FREE_SPACE>" && var->size <= trueSize) {
             foundFreeSpace = true;
-            if (var->size == num_elements) {
-                uint32_t varAddr = getVarAddress(var);
-                //deleteVar();
-                mmu.addVariableToProcess(pid, var_name, type, num_elements, varAddr);
-            } else if  (var->size > num_elements) {
+            if (var->size == trueSize) {
+                //uint32_t varAddr = getVarAddress(var);
+                var->name = var_name;
+                var->type = type;
+            } else if  (var->size > trueSize) {
                 // Update free space address to be N bytes bigger
+                var->virtual_address += trueSize;
                 // Update free space size to be N bytes smaller
+                var->size -= trueSize;
                 // N = num_elements
+
+                // Create the new variable
+                Mmu::addVariableToProcess(pid, var_name, type, trueSize, var->virtual_address + 1);
+
             }
         }
     }
 
     if (foundFreeSpace == false) {
+        int currentPage = page_table.pageCount(pid);
+        uint32_t oldFinal = page_table.getPhysicalAddress(pid, getLastVarAddress(pid));
+        address =  oldFinal + getLastVarSize(int pid);
         // addEntry to create new page
+        for (int i = currentPage + 1, i < (address + trueSize) / page_size; i++) {
+            page_table.addEntry(pid, i);
+        }
+        //   - insert variable into MMU
         // get address 
+        mmu.addVariableToProcess(pid, var_name, type, num_elements, address);   
     }
-    
-
-    //   - insert variable into MMU
-    mmu.addVariableToProcess(pid, var_name, type, num_elements, address);
 
     //   - print virtual memory address 
     std::cout << address << std::endl;

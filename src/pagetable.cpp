@@ -81,3 +81,13 @@ void PageTable::print()
         // TODO: print all pages
     }
 }
+
+int PageTable::pageCount(int pid) {
+    int pageNum = 0;
+    std::string currEntry = std::to_string(pid) + "|" + std::to_string(pageNum);
+    while (_table.find(currEntry) != _table.end()) {
+        pageNum++;
+        currEntry = std::to_string(pid) + "|" + std::to_string(pageNum);
+    }
+    return pageNum - 1;
+}
