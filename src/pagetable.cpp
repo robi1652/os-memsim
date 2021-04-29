@@ -96,3 +96,11 @@ int PageTable::pageCount(int pid) {
 uint32_t PageTable::getPageSize() {
     return _page_size;
 }
+
+void PageTable::deleteEntry(uint32_t pid, uint32_t page_to_delete) 
+{
+    std::string entry_to_delete = std::to_string(pid) + "|" + std::to_string(page_to_delete);
+    _table.erase(entry_to_delete);
+}
+
+

@@ -264,13 +264,14 @@ void freeVariable(uint32_t pid, std::string var_name, Mmu *mmu, PageTable *page_
         return;
     }
 
+    mmu->removeVariable(pid, var_name);
     std::vector<uint32_t> pages_to_delete = mmu->mergeAdjacentPartitions(pid, page_table->getPageSize());
-    for (int i = 0; i <pages_to_delete.size(); i++) 
+    for (uint32_t i : pages_to_delete) 
     {
-        //delete entry here
+        page_table->deleteEntry(pid, i);
     }
 
-
+    return;
 }
 
 void terminateProcess(uint32_t pid, Mmu *mmu, PageTable *page_table)

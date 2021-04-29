@@ -38,6 +38,7 @@ public:
     void print();
     uint32_t getPageSize();
     int pageCount(int pid);
+    void deleteEntry(uint32_t pid, uint32_t page_to_delete);
 };
 
 #endif // __PAGETABLE_H_
