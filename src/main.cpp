@@ -280,3 +280,30 @@ void terminateProcess(uint32_t pid, Mmu *mmu, PageTable *page_table)
     //   - free all pages associated with given process
 }
 
+std::vector<std::string> split_string(std::string str) 
+{
+    std::vector<std::string> return_vector;
+    char space_delimeter = ' ';
+
+    int left_pointer = 0;
+    int right_pointer = 0;
+    int end_index = str.size();
+
+    while (right_pointer < end_index) 
+    {   
+
+        if (str.at(right_pointer) == space_delimeter && right_pointer != left_pointer) 
+        {
+            std::string temp = str.substr(left_pointer, right_pointer-1);
+            return_vector.push_back(temp);
+            while(str.at(right_pointer) == space_delimeter && right_pointer < end_index) right_pointer++; //find start of word
+            left_pointer = right_pointer;
+        } 
+        else 
+        {
+            right_pointer++;
+        }
+    }
+    return return_vector;
+}
+
