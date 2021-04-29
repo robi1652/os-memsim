@@ -70,30 +70,47 @@ void Mmu::print()
 }
 
 int Mmu::getVarVectorLength(int pid) {
-    Process *proc = NULL;
-    for (int i = 0; i < _processes.size(); i++) {
-        if (_processes[i]->pid == pid) {
-            proc = _processes[i];
-            break;
-        }
-    }
+    Process *proc = _processes[getIndexOfProc(pid)];
     return proc->variables.size();
 }
 
-Variable* Mmu::getVariableAtIndex(int index, uint32_t pid) {
-    Process *proc;
-    for (int i = 0; i < _processes.size(); i++) {
-        if (_processes[i]->pid == pid) {
-            proc = _processes[i];
-            break;
-        }
-    }
+Variable* Mmu::getVarAtIndex(int pid, int index) {
+    Process *proc = _processes[getIndexOfProc(pid)];
     return proc->variables[index];
 }
 
-
 uint32_t Mmu::getVarAddress(Variable* var) {
     return var->virtual_address;
+}
+
+uint32_t Mmu::getLastVarAddress(int pid) {
+    Process *proc = _processes[getIndexOfProc(pid)];
+    return proc->variables[proc->variables.size() - 1]->virtual_address;
+}
+
+uint32_t Mmu::getLastVarSize(int pid) {
+    Process *proc = _processes[getIndexOfProc(pid)];
+    return proc->variables[proc->variables.size() - 1]->size;
+}
+
+uint32_t Mmu::currentSize(int pid) {
+    int sum = 0;
+    Process *proc = _processes[getIndexOfProc(pid)];
+    for (int i = 0; i < proc->variables.size(); i++) {
+        sum += proc->variables[i]->size;
+    }
+    return sum;
+}
+
+int Mmu::getIndexOfProc(int pid) {
+    Process *proc = NULL;
+    int i;
+    for (i = 0; i < _processes.size(); i++) {
+        if (_processes[i]->pid == pid) {
+            return i;
+        }
+    }
+    return -1;
 }
 
 Variable* Mmu::getVariable(uint32_t pid, std::string v_name) {
@@ -209,21 +226,3 @@ std::vector<uint32_t> Mmu::mergeAdjacentPartitions(uint32_t pid, uint32_t page_s
     return pages_to_delete;
 }
 
-uint32_t Mmu::currentSize(int pid) {
-    int sum = 0;
-    Process *proc = getProcess(pid);
-    for (int i = 0; i < proc->variables.size(); i++) {
-        sum += proc->variables[i]->size;
-    }
-    return sum;
-}
-
-uint32_t Mmu::getLastVarAddress(int pid) {
-    Process *proc = getProcess(pid);
-    return proc->variables[proc->variables.size() - 1]->virtual_address;
-}
-
-uint32_t Mmu::getLastVarSize(int pid) {
-    Process *proc = getProcess(pid);
-    return proc->variables[proc->variables.size() - 1]->size;
-}

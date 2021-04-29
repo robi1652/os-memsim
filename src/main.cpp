@@ -39,7 +39,23 @@ int main(int argc, char **argv)
     while (command != "exit") {
         // Handle command
         // TODO: implement this!
+        /*
+        if (command == "create") {
 
+        } else if (command == "allocate") {
+
+        } else if (command == "set") {
+            
+        } else if (command == "free") {
+            
+        } else if (command == "terminate") {
+            
+        } else if (command == "print") {
+            
+        } else {
+
+        }
+        */
         // Get next command
         std::cout << "> ";
         std::getline (std::cin, command);
@@ -76,14 +92,13 @@ void createProcess(int text_size, int data_size, Mmu *mmu, PageTable *page_table
     //   - create new process in the MMU
     uint32_t newProcess = mmu->createProcess(); //::createProcess();
     
-
     //   - allocate new variables for the <TEXT>, <GLOBALS>, and <STACK>
     allocateVariable(newProcess, "<TEXT>", DataType::Char, text_size, mmu, page_table);
-    allocateVariable(newProcess, "<GLOBALS>", DataType::Char, data_size,mmu, page_table);
-    allocateVariable(newProcess, "<STACK>", DataType::Char, 65536,mmu, page_table);
+    allocateVariable(newProcess, "<GLOBALS>", DataType::Char, data_size, mmu, page_table);
+    allocateVariable(newProcess, "<STACK>", DataType::Char, 65536, mmu, page_table);
 
     //   - print pid
-     std::cout << newProcess << std::endl;
+    printf("%d", newProcess);
 }
 
 void allocateVariable(uint32_t pid, std::string var_name, DataType type, uint32_t num_elements, Mmu *mmu, PageTable *page_table)
@@ -116,7 +131,7 @@ void allocateVariable(uint32_t pid, std::string var_name, DataType type, uint32_
 
     for (int i = 0; i < mmu->getVarVectorLength(pid); i++) {
         // Can this be a pointer or should I push it back onto Variables
-        Variable* var = mmu->getVariableAtIndex(i, pid);
+        Variable* var = mmu->getVarAtIndex(pid, i);
         if (var->name == "<FREE_SPACE>" && var->size <= trueSize) {
             foundFreeSpace = true;
             if (var->size == trueSize) {
@@ -137,9 +152,8 @@ void allocateVariable(uint32_t pid, std::string var_name, DataType type, uint32_
                 // How do I do that?
                 // Current plan: 
                 // 1. Figure out how much space is left on this current page
-                uint32_t page_size = page_table->getPageSize();
-                int currentPage = var->virtual_address / page_size;
-                int spaceLeft = var->virtual_address - (page_size * currentPage);
+                int currentPage = var->virtual_address / page_table->getPageSize();
+                int spaceLeft = var->virtual_address - (page_table->getPageSize() * currentPage);
                 // 2. If space left < space needed, then a new page is needed. 
                 if (spaceLeft < trueSize) {
                     newVirtAdd += (spaceLeft % typeSize);
@@ -158,14 +172,13 @@ void allocateVariable(uint32_t pid, std::string var_name, DataType type, uint32_
     //   -- If it doesn't then we need to addEntry
 
     int currentPage = page_table->pageCount(pid);
-    uint32_t page_size = page_table->getPageSize();
 
     if (checkIfAddEntry == true) {
         int currentSize = mmu->currentSize(pid);
-        if (currentSize > (page_size * currentPage)) {
+        if (currentSize > (page_table->getPageSize() * currentPage)) {
             // Need to addEntry
             // Does this setup work? Or does it conflict with that second example?
-            for (int i = page_size * currentPage; i < currentSize; i += page_size) {
+            for (int i = page_table->getPageSize() * currentPage; i < currentSize; i += page_table->getPageSize()) {
                 page_table->addEntry(pid, currentPage + 1);
             }
         }
