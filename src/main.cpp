@@ -39,6 +39,15 @@ int main(int argc, char **argv)
     while (command != "exit") {
         // Handle command
         // TODO: implement this!
+        std::vector<std::string> command_parts = split_string(command);
+        
+        if (command_parts[0] == "create") 
+        {
+            if (command_parts.size() != 3) 
+            {
+                std::cout << "ERROR: "
+            }
+        }
         /*
         if (command == "create") {
 
@@ -288,7 +297,7 @@ std::vector<std::string> split_string(std::string str)
 
     for (int i = 0; i < str.size(); i++) 
     {
-        if (str[i] == ':') 
+        if (str[i] == ' ') 
         {
             parts.push_back(temp);
             temp = "";
