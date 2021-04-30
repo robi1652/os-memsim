@@ -45,6 +45,7 @@ public:
     Variable* getVarAtIndex(int pid, int index);
     int getIndexOfProc(int pid);
     void deleteProcess(int pid);
+    std::vector<Process*> getProcesses();
     //Variable* getVariable(uint32_t pid, std::string v_name);
 };
 
