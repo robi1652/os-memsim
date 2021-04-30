@@ -103,4 +103,17 @@ void PageTable::deleteEntry(uint32_t pid, uint32_t page_to_delete)
     _table.erase(entry_to_delete);
 }
 
+void PageTable::deletePage(std::string entry) {
+    _table.erase(entry);
+}
 
+void PageTable::deletePagesLoop(int pid) {
+    int pageNum = 0;
+    std::string currEntry = std::to_string(pid) + "|" + std::to_string(pageNum);
+    while (_table.find(currEntry) != _table.end()) {
+        _table.erase(currEntry);
+        pageNum++;
+        currEntry = std::to_string(pid) + "|" + std::to_string(pageNum);
+    }
+
+}

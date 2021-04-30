@@ -380,17 +380,11 @@ void terminateProcess(uint32_t pid, Mmu *mmu, PageTable *page_table)
 {
     // TODO: implement this!
     //   - remove process from MMU
-    mmu->deleteProcess(getIndexOfProc(pid));
+    mmu->deleteProcess(mmu->getIndexOfProc(pid));
     
     //   - free all pages associated with given process
-    int pageNum = 0;
-    std::string currEntry = std::to_string(pid) + "|" + std::to_string(pageNum);
-    while (_table.find(currEntry) != _table.end()) {
-        page_table->deletePage(currEntry);
-        pageNum++;
-        currEntry = std::to_string(pid) + "|" + std::to_string(pageNum);
-    }
-
+    page_table->deletePagesLoop(pid);
+}
 
 
 std::vector<std::string> split_string(std::string str) 
