@@ -78,7 +78,17 @@ int main(int argc, char **argv)
             } 
             else 
             {
-                allocateVariable(std::stoi(command_parts[1]), command_parts[2], to_DataType(command_parts[3]), std::stoi(command_parts[4]), mmu, page_table);   
+                int pid = std::stoi(command_parts[1]);
+                std::string var_name = command_parts[2];
+                if (mmu->getProcess(pid) == NULL) {
+                    printf("error: process not found");
+                    continue;
+                }
+                if (mmu->getVariable(pid, var_name) == NULL) {
+                    printf("error: variable not found");
+                    continue;
+                }
+                allocateVariable(pid, var_name, to_DataType(command_parts[3]), std::stoi(command_parts[4]), mmu, page_table);   
             }
         } 
         else if (command == "set") 
@@ -96,6 +106,14 @@ int main(int argc, char **argv)
             offset = std::stoi(command_parts[3]);
             uint32_t t_size;
             DataType data_type = mmu->getVariable(pid, var_name)->type;
+            if (mmu->getProcess(pid) == NULL) {
+                printf("error: process not found");
+                continue;
+            }
+            if (mmu->getVariable(pid, var_name) == NULL) {
+                printf("error: variable not found");
+                continue;
+            }
 
             for (int i = 4; i < command_parts.size(); i++) 
             {
@@ -140,7 +158,23 @@ int main(int argc, char **argv)
             /*
             Command is of form: commad_parts[0] = command_type, command_parts[1] = var_name
             */
-            freeVariable(std::stoi(command_parts[1]), command_parts[2], mmu, page_table);
+            int pid = std::stoi(command_parts[1]);
+            std::string var_name = command_parts[2];
+            if (mmu->getProcess(pid) == NULL) {
+                printf("error: process not found");
+                continue;
+            }
+            if (mmu->getVariable(pid, var_name) == NULL) {
+                printf("error: variable not found");
+                continue;
+            }
+            freeVariable(pid, var_name, mmu, page_table);
+        } else if (command == "terminate") {
+            if (mmu->getProcess(std::stoi(command_parts[1])) == NULL) {
+                printf("error: process not found");
+                continue;
+            }
+            terminateProcess(std::stoi(command_parts[1]), mmu, page_table)
         }
         else if (command == "print") 
         {
