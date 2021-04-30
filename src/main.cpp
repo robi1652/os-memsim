@@ -174,7 +174,7 @@ int main(int argc, char **argv)
                 printf("error: process not found");
                 continue;
             }
-            terminateProcess(std::stoi(command_parts[1]), mmu, page_table)
+            terminateProcess(std::stoi(command_parts[1]), mmu, page_table);
         }
         else if (command == "print") 
         {
