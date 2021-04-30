@@ -197,39 +197,60 @@ int main(int argc, char **argv)
                     //Process *p = mmu->getProcess(std::stoi(pid));  
                     Variable *v = mmu->getVariable(std::stoi(pid), name_of_variable);
                     uint32_t physical_address = page_table->getPhysicalAddress(std::stoi(pid), v->virtual_address);
-                    printVariable(memory, v, physical_address);
+                    DataType type = v->type;
+                    int type_size;
+                    if (type == DataType::Int || type == DataType::Float) 
+                    {
+                        type_size = 4;
+                    }
+                    else if (type == DataType::Long || type == DataType::Double)
+                    {
+                        type_size = 8;
+                    } 
+                    else if (type == DataType::Short) 
+                    {
+                        type_size = 2;
+                    }
+                    else 
+                    {
+                        type_size = 1;
+                    }
+
+                    int new_size = v->size/type_size;
+                    bool flag = false;
+                    int i = 0;
+
+                    while (i < 4 && !flag) {
+                        int physical_address = page_table->getPhysicalAddress(std::stoi(pid), v->virtual_address + i);
+                        printVariable(memory, v, physical_address);
+                        i++;
+                        
+                        if (i >= new_size) 
+                        {
+                            flag = true;
+                        }
+                        else 
+                        {
+                            std::cout << ", ";
+                        }
+                    }
+
+                    
+                    std::cout << std::endl;
                 }              
                 else 
                 {
                     std::cout << "Error: Not a valid input" << std::endl;
                     
                 }
-
-
                 
             }
         } 
         else 
         {
-
+            std::cout << "ERROR: Command not recognized";
         }
-        /*
-        if (command == "create") {
-
-        } else if (command == "allocate") {
-
-        } else if (command == "set") {
-            
-        } else if (command == "free") {
-            
-        } else if (command == "terminate") {
-            
-        } else if (command == "print") {
-            
-        } else {
-
-        }
-        */
+        
         // Get next command
         std::cout << "> ";
         std::getline (std::cin, command);
@@ -275,8 +296,10 @@ void createProcess(int text_size, int data_size, Mmu *mmu, PageTable *page_table
     printf("%d", newProcess);
 }
 
+
 void allocateVariable(uint32_t pid, std::string var_name, DataType type, uint32_t num_elements, Mmu *mmu, PageTable *page_table)
 {
+    /*
     // TODO: implement this!
     //   - find first free space within a page already allocated to this process that is large enough to fit the new variable
     // No idea how to look through the table for a page already allocated to the process
@@ -362,8 +385,11 @@ void allocateVariable(uint32_t pid, std::string var_name, DataType type, uint32_
     //   - print virtual memory address 
     uint32_t oldFinal = page_table->getPhysicalAddress(pid, mmu->getLastVarAddress(pid));
     address =  oldFinal + mmu->getLastVarSize(pid);
-    std::cout << address << std::endl;
-}
+    std::cout << address << std::endl;*/
+
+} 
+
+
 
 void setVariable(uint32_t pid, std::string var_name, uint32_t offset, void *value, Mmu *mmu, PageTable *page_table, void *memory)
 {
@@ -518,6 +544,29 @@ DataType to_DataType(std::string DataType_as_string)
 
 void printVariable(void *memory, Variable *v, int physical_address)
 {
-
+    if (v->type == DataType::Int) 
+    {
+        std::cout << ((int*)memory)[physical_address];
+    } 
+    else if (v->type == DataType::Char) 
+    {
+        std::cout << ((char*)memory)[physical_address];
+    }
+    else if (v->type == DataType::Float) 
+    {
+        std::cout << ((float*)memory)[physical_address];
+    }
+    else if (v->type == DataType::Double) 
+    {
+        std::cout << ((double*)memory)[physical_address];
+    }
+    else if (v->type == DataType::Long) 
+    {
+        std::cout << ((long*)memory)[physical_address];
+    }
+    else if (v->type == DataType::Short)
+    {
+        std::cout << ((short*)memory)[physical_address];
+    }
 }
 
