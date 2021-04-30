@@ -10,6 +10,8 @@ void allocateVariable(uint32_t pid, std::string var_name, DataType type, uint32_
 void setVariable(uint32_t pid, std::string var_name, uint32_t offset, void *value, Mmu *mmu, PageTable *page_table, void *memory);
 void freeVariable(uint32_t pid, std::string var_name, Mmu *mmu, PageTable *page_table);
 void terminateProcess(uint32_t pid, Mmu *mmu, PageTable *page_table);
+std::vector<std::string> split_string(std::string str);
+DataType to_DataType(std::string DataType_as_string);
 
 int main(int argc, char **argv)
 {
@@ -40,13 +42,104 @@ int main(int argc, char **argv)
         // Handle command
         // TODO: implement this!
         std::vector<std::string> command_parts = split_string(command);
-        
-        if (command_parts[0] == "create") 
+        uint32_t text_size;
+        uint32_t data_size;
+        uint32_t number_of_elements;
+        uint32_t pid;
+        uint32_t offset;
+        std::string var_name;
+
+        //update command based on user parameter
+        command = command_parts[0];
+
+        if (command == "create") 
         {
+            /*
+            In this command, in vector command_parts: command_parts[0] = command_type, command_parts[1] = text_size, command_parts[2] = data_size
+            */
             if (command_parts.size() != 3) 
             {
-                std::cout << "ERROR: "
+                std::cout << "ERROR: Invalid Input - 'create' Command Must be of form <command_type> <text_size> <data_size>";
             }
+            else 
+            {
+                createProcess(std::stoi(command_parts[1]), std::stoi(command_parts[2]), mmu, page_table);
+            }
+        } 
+        else if (command == "allocate") 
+        {
+            /*
+            In this command, command parts is as follows: command_parts[0] = command_type, command_parts[1] = pid, command_parts[2] = var_name, command_parts[4] = DataType, command_parts[4] = num_elements
+            */
+            if (command_parts.size() != 5) 
+            {
+                std::cout << "ERROR: Invalid Input - 'allocate' Command Must be of form <command_type> <process_ID> <variable_name <data_type> <number_of_elements>";
+            } 
+            else 
+            {
+                allocateVariable(std::stoi(command_parts[1]), command_parts[2], to_DataType(command_parts[3]), std::stoi(command_parts[4]), mmu, page_table);   
+            }
+        } 
+        else if (command == "set") 
+        {
+            /*
+            Command is of form: command_parts[0] = set command_parts[1] = <PID> command_parts[2] = <var_name> command_parts[3] = <offset>  command_parts[,4,5,5...N] = <value_0> <value_1> <value_2> ... <value_N> (set the value for a variable)
+            */
+            if (command_parts.size() < 5) 
+            {
+                std::cout << "ERROR: Input is not valid for 'set' command -set <PID> <var_name> <offset> <value_0> <value_1> <value_2> ... <value_N>";
+            }
+
+            pid = std::stoi(command_parts[1]);
+            var_name = command_parts[2];
+            offset = std::stoi(command_parts[3]);
+            uint32_t t_size;
+            DataType data_type = mmu->getVariable(pid, var_name)->type;
+
+            for (int i = 4; i < command_parts.size(); i++) 
+            {
+                void *value;
+                if (data_type == DataType::Int || data_type == DataType::Float) 
+                {
+                    value = malloc(4);
+                    value = (void*) std::stoi(command_parts[i]);
+                    offset *= 4;
+                    t_size = 4;
+                }
+                else if (data_type == DataType::Long || data_type == DataType::Double) 
+                {
+                    value = malloc(8);
+                    long l_var = std::stol(command_parts[i]);
+                    double d_var = std::stod(command_parts[i]);
+
+                    data_type == DataType::Long ? memcpy(&value, &l_var, 8) : memcpy(&value, &d_var, 8);
+                    
+                    offset *= 8;
+                    t_size = 8;
+                }
+                else if (data_type == DataType::Short) 
+                {
+                    value = malloc(2);
+                    value = (void*) std::stoi(command_parts[i]);
+                    offset *= 2;
+                    t_size = 2;
+                }
+                else 
+                {
+                    value = malloc(1);
+                    value = (void*) command_parts[i][0];
+                    t_size = 1;
+                }
+
+                setVariable(pid, var_name, offset, value, mmu, page_table, memory);
+            }
+        }
+        else if (command == "free") 
+        {
+            /*
+            Command is of form: commad_parts[0] = command_type, command_parts[1] = var_name
+            */
+            freeVariable(std::stoi(command_parts[1]), command_parts[2], mmu, page_table);
         }
         /*
         if (command == "create") {
@@ -311,5 +404,39 @@ std::vector<std::string> split_string(std::string str)
     //don't forget to push last work
     parts.push_back(temp);
     return parts;
+}
+
+DataType to_DataType(std::string DataType_as_string)
+{
+    DataType data_type;
+    if(DataType_as_string == "int")
+    {
+        data_type = DataType::Int;
+    }
+    else if(DataType_as_string == "char")
+    {
+        data_type = DataType::Char;
+    }
+    else if(DataType_as_string == "long")
+    {
+        data_type = DataType::Long;
+    }
+    else if(DataType_as_string == "short")
+    {
+        data_type = DataType::Short;
+    }
+    else if(DataType_as_string == "float")
+    {
+        data_type = DataType::Float;
+    }
+    else if(DataType_as_string == "double")
+    {
+       data_type = DataType::Double;
+    }
+    else
+    {
+        data_type = DataType::FreeSpace;
+    }
+    return data_type;
 }
 
