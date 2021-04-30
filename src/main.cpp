@@ -12,6 +12,7 @@ void freeVariable(uint32_t pid, std::string var_name, Mmu *mmu, PageTable *page_
 void terminateProcess(uint32_t pid, Mmu *mmu, PageTable *page_table);
 std::vector<std::string> split_string(std::string str);
 DataType to_DataType(std::string DataType_as_string);
+void printVariable(void *memory, Variable *v, int physical_address);
 
 int main(int argc, char **argv)
 {
@@ -185,18 +186,23 @@ int main(int argc, char **argv)
 
                     //skip colon
                     stepper++;
-
-                    while(stepper < command_parts[1][stepper].size()) 
+                    
+                    int size = command_parts[1].size();
+                    while(stepper < size) 
                     {
                         name_of_variable.push_back(command_parts[1][stepper]);
                         stepper++;
                     }
 
-                    Process *p = mmu->getProcess(pid);                   
+                    //Process *p = mmu->getProcess(std::stoi(pid));  
+                    Variable *v = mmu->getVariable(std::stoi(pid), name_of_variable);
+                    uint32_t physical_address = page_table->getPhysicalAddress(std::stoi(pid), v->virtual_address);
+                    printVariable(memory, v, physical_address);
                 }              
                 else 
                 {
                     std::cout << "Error: Not a valid input" << std::endl;
+                    
                 }
 
 
@@ -508,5 +514,10 @@ DataType to_DataType(std::string DataType_as_string)
         data_type = DataType::FreeSpace;
     }
     return data_type;
+}
+
+void printVariable(void *memory, Variable *v, int physical_address)
+{
+
 }
 
