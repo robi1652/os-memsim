@@ -141,6 +141,72 @@ int main(int argc, char **argv)
             */
             freeVariable(std::stoi(command_parts[1]), command_parts[2], mmu, page_table);
         }
+        else if (command == "print") 
+        {
+            if (command_parts[1] == "mmu") 
+            {
+                mmu->print();
+            }
+            else if (command_parts[1] == "page") 
+            {
+                page_table->print();
+            }
+            else if (command_parts[1] == "processes") 
+            {
+                std::vector<Process*> processes = mmu->getProcesses();
+                
+                for (Process* i : processes) 
+                {
+                    std::cout << i->pid << std::endl;
+                }
+
+            } else {
+                bool colon_found = false;
+                std::string pid = "";
+                std::string name_of_variable = "";
+
+                //check for colon found
+                for (int i = 0; i < command_parts[1].size(); i++) {
+                    if (command_parts[1][i] == ':') 
+                    {
+                        colon_found = true;
+                    }
+                }
+
+                if (colon_found) 
+                {
+                    //get first arg
+                    int stepper = 0;
+                    while (command_parts[1][stepper] != ':') {
+
+                        pid.push_back(command_parts[1][stepper]);
+                        stepper++;
+                    }
+
+                    //skip colon
+                    stepper++;
+
+                    while(stepper < command_parts[1][stepper].size()) 
+                    {
+                        name_of_variable.push_back(command_parts[1][stepper]);
+                        stepper++;
+                    }
+
+                    Process *p = mmu->getProcess(pid);                   
+                }              
+                else 
+                {
+                    std::cout << "Error: Not a valid input" << std::endl;
+                }
+
+
+                
+            }
+        } 
+        else 
+        {
+
+        }
         /*
         if (command == "create") {
 
