@@ -231,6 +231,18 @@ std::vector<uint32_t> Mmu::mergeAdjacentPartitions(uint32_t pid, uint32_t page_s
     return pages_to_delete;
 }
 
+std::vector<Process*> Mmu::getProcesses()
+{ 
+    std::vector<Process*> return_vector;
+
+    for (Process *i : _processes) 
+    {
+        return_vector.push_back(i);
+    }
+
+    return return_vector;
+}
+
 void Mmu::deleteProcess(int index) {
     _processes.erase(_processes.begin() + index - 1);
 }
