@@ -79,7 +79,13 @@ void PageTable::print()
 
     for (i = 0; i < keys.size(); i++)
     {
+        std::string currentKey = keys[i];
+        std::string delimiter = "|";
+        std::string currentPid = currentKey.substr(0, currentKey.find(delimiter));
+        std::string pageNum = currentKey.substr(1, currentKey.find(delimiter));
+        int currentFrame = _table[currentKey];
         // TODO: print all pages
+        printf(" %4s | %11s | %12i \n", currentPid, pageNum, currentFrame);
     }
 }
 
