@@ -44,6 +44,7 @@ public:
     uint32_t getLastVarSize(int pid);
     Variable* getVarAtIndex(int pid, int index);
     int getIndexOfProc(int pid);
+    void deleteProcess(int pid);
     //Variable* getVariable(uint32_t pid, std::string v_name);
 };
 
