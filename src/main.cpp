@@ -282,7 +282,7 @@ int main(int argc, char **argv)
         } 
         else 
         {
-            std::cout << "ERROR: Command not recognized";
+            std::cout << "ERROR: Command not recognized\n";
         }
         
         // Get next command
@@ -327,7 +327,7 @@ void createProcess(int text_size, int data_size, Mmu *mmu, PageTable *page_table
     allocateVariable(newProcess, "<STACK>", DataType::Char, 65536, mmu, page_table);
 
     //   - print pid
-    printf("%d", newProcess);
+    printf("%d\n", newProcess);
 }
 
 
