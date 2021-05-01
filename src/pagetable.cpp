@@ -38,9 +38,13 @@ void PageTable::addEntry(uint32_t pid, int page_number)
     while (frame == -1) {
         if (_table.find(entry) == _table.end()) {
             frame = mapIter;
+            std::cout << "gets in if " << frame << std::endl;
+            break;
         }
+        
         mapIter++;
     }
+    std::cout << "escapes" << std::endl;
     _table[entry] = frame;
 }
 
@@ -49,10 +53,11 @@ int PageTable::getPhysicalAddress(uint32_t pid, uint32_t virtual_address)
     // Convert virtual address to page_number and page_offset
     // TODO: implement this!
     // done
+    std::cout << "test 2";
     int page_number = _page_size / virtual_address;
 
     int page_offset = _page_size % virtual_address;
-
+    
     // Combination of pid and page number act as the key to look up frame number
     std::string entry = std::to_string(pid) + "|" + std::to_string(page_number);
     

@@ -322,6 +322,7 @@ void createProcess(int text_size, int data_size, Mmu *mmu, PageTable *page_table
     uint32_t newProcess = mmu->createProcess(); //::createProcess();
     
     //   - allocate new variables for the <TEXT>, <GLOBALS>, and <STACK>
+    //std::cout << text_size << " " << data_size << std::endl;
     allocateVariable(newProcess, "<TEXT>", DataType::Char, text_size, mmu, page_table);
     allocateVariable(newProcess, "<GLOBALS>", DataType::Char, data_size, mmu, page_table);
     allocateVariable(newProcess, "<STACK>", DataType::Char, 65536, mmu, page_table);
@@ -333,7 +334,7 @@ void createProcess(int text_size, int data_size, Mmu *mmu, PageTable *page_table
 
 void allocateVariable(uint32_t pid, std::string var_name, DataType type, uint32_t num_elements, Mmu *mmu, PageTable *page_table)
 {
-    /*
+    
     // TODO: implement this!
     //   - find first free space within a page already allocated to this process that is large enough to fit the new variable
     // No idea how to look through the table for a page already allocated to the process
@@ -357,13 +358,13 @@ void allocateVariable(uint32_t pid, std::string var_name, DataType type, uint32_
         trueSize = num_elements * 8;
         typeSize = 8;
     }
-
+    std::cout << "true size is " << trueSize << std::endl;
     bool checkIfAddEntry = false;
 
     for (int i = 0; i < mmu->getVarVectorLength(pid); i++) {
         // Can this be a pointer or should I push it back onto Variables
         Variable* var = mmu->getVarAtIndex(pid, i);
-        if (var->name == "<FREE_SPACE>" && var->size <= trueSize) {
+        if (var->name == "<FREE_SPACE>" && var->size >= trueSize) {
             foundFreeSpace = true;
             if (var->size == trueSize) {
                 //uint32_t varAddr = getVarAddress(var);
@@ -374,11 +375,13 @@ void allocateVariable(uint32_t pid, std::string var_name, DataType type, uint32_
 
                 // Update free space address to be N bytes bigger            
                 uint32_t newVirtAdd = var->virtual_address;
+                std::cout << "new virt add "<< newVirtAdd << std::endl;
                 var->virtual_address += trueSize;
+                std::cout << " after adding = " << var->virtual_address << std::endl;
                 // Update free space size to be N bytes smaller
                 var->size -= trueSize;
                 // N = num_elements
-
+                
                 // Need to check to make sure an element doesn't get split on a page break HERE, right?
                 // How do I do that?
                 // Current plan: 
@@ -389,37 +392,47 @@ void allocateVariable(uint32_t pid, std::string var_name, DataType type, uint32_
                 if (spaceLeft < trueSize) {
                     newVirtAdd += (spaceLeft % typeSize);
                 }
+                
                 //   --Mod space left by type size. If mod != 0, newVirtAdd += result of the mod? 
 
                 //   - insert variable into MMU
                 // Create the new variable              
                 mmu->addVariableToProcess(pid, var_name, type, trueSize, newVirtAdd);
+                
             }
         }
     }
-
+    
     // Currently Confused: Don't know how adding pages/frames works. Here's my thought process
     // 1. Check to see if it fits on the current page, and if it does, then do nothing.
     //   -- If it doesn't then we need to addEntry
 
     int currentPage = page_table->pageCount(pid);
-
+    
     if (checkIfAddEntry == true) {
         int currentSize = mmu->currentSize(pid);
         if (currentSize > (page_table->getPageSize() * currentPage)) {
             // Need to addEntry
             // Does this setup work? Or does it conflict with that second example?
-            for (int i = page_table->getPageSize() * currentPage; i < currentSize; i += page_table->getPageSize()) {
-                page_table->addEntry(pid, currentPage + 1);
+            for (int i = page_table->getPageSize() * currentPage; i < currentPage; i += page_table->getPageSize()) {
+                std::cout << "loop interation: " << i << std::endl;
+                std::cout << currentSize - page_table->getPageSize() << std::endl;
+                page_table->addEntry(pid, currentPage + 1);   
+                  
             }
+            std::cout << "get here next " << std::endl;
         }
     }
-     
+    std::cout << "helpline" << std::endl;
     // get address 
     //   - print virtual memory address 
-    uint32_t oldFinal = page_table->getPhysicalAddress(pid, mmu->getLastVarAddress(pid));
+    uint32_t test = mmu->getLastVarAddress(pid);
+    uint32_t oldFinal = page_table->getPhysicalAddress(pid, test);
+    std::cout << "get here3" << std::endl;
     address =  oldFinal + mmu->getLastVarSize(pid);
-    std::cout << address << std::endl;*/
+
+    std::cout << address << std::endl;
+    
 
 } 
 

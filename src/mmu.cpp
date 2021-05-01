@@ -89,6 +89,7 @@ uint32_t Mmu::getVarAddress(Variable* var) {
 }
 
 uint32_t Mmu::getLastVarAddress(int pid) {
+    //std::cout << "test 1";
     Process *proc = _processes[getIndexOfProc(pid)];
     return proc->variables[proc->variables.size() - 1]->virtual_address;
 }
@@ -101,7 +102,7 @@ uint32_t Mmu::getLastVarSize(int pid) {
 uint32_t Mmu::currentSize(int pid) {
     int sum = 0;
     Process *proc = _processes[getIndexOfProc(pid)];
-    for (int i = 0; i < proc->variables.size(); i++) {
+    for (int i = 0; i < proc->variables.size() - 1; i++) {
         sum += proc->variables[i]->size;
     }
     return sum;
